@@ -2,86 +2,85 @@ const fileInput = document.querySelector('#audio_input');
 const uploadButton = document.querySelector('.upload_button');
 const convertButton = document.querySelector('.convert_button');
 let filepath = '';
+let folder_value = 'transcription-bucket'; 
+const bucket_value = 'guest-users';
 
-fileInput.addEventListener('change',()=>
-{
-    const filename = fileInput.files[0].name;
-    filepath = `audio_buckets/${Date.now()}${filename}`;
-    console.log(filepath + ' is uploaded!!!');
-})
-uploadButton.addEventListener('click', 
-    async function sendUrlLink()
+
+fileInput.addEventListener('change',
+    ()=>
     {
-        const url = '/api/transcribe';
+       
+        filepath = `${folder_value}/${Date.now()}${fileInput.files[0].name}`;
+        console.log(filepath);
+    }
+)
+
+uploadButton.addEventListener('click',
+    async function Upload_data_Front()
+    {
+        const url_upload_file = `/api/upload`;
         try 
         {
-            const Myheaders = new Headers();
-            Myheaders.append(
-                "Content-type",
-                "application/json"
-            );
-            const response = await fetch(url,
-            {
-              method: 'POST',
-              headers :Myheaders ,
-              body: JSON.stringify({filepath}),
-            } );
-            if (!response.ok)
-            {
-                throw new Error(
-                    `Response Status :  ${response.status}`
-                );
-            }
-            const {signedUrl,token}= await response.json();
-            const upload_response = await fetch (signedUrl,
+            const response = await fetch(url_upload_file, 
                 {
-                 method: "PUT",
-                 headers : {
-                             "Content-type" : (fileInput.files[0]).type
-                           },
-                 body : fileInput.files[0],
+                    method: 'POST',
+                    headers: {
+                        'Content-type' : "application/json"
+                    },
+                    body: JSON.stringify({bucket_value : 'guest-users',filepath : `${folder_value}/${Date.now()}${fileInput.files[0].name}`}),
+                })
+
+            if(!response.ok)
+               {
+                throw new Error(`Response status:${response.status}`)
+               }
+            const signedUrl = await response.text();
+            const upload_time = await fetch(signedUrl,
+                {
+                    method: "PUT",
+                    headers:{ "Content-type" : fileInput.files[0].type},
+                    body: (fileInput.files[0])
                 }
-            );
-            if (!upload_response)
+            )
+            if(!upload_time)
             {
-                throw new Error (`This upload failed on the frontend`);
+                throw new Error(`Response status: ${upload_time.status}`);
             }
-            console.log('it is a success')
+            console.log('upload successful');
         } 
-        catch (error) {
+        catch (error) 
+        {
             console.error(error.message);
         }
     }
 )
-convertButton.addEventListener('click', 
-    async function GettingTranscript()
+
+convertButton.addEventListener('click',
+    async function Convert_Data()
     {
-      const url = '/api/process/';
-     try 
+      url_upload_file = `/api/process`;
+      try 
+      {
+        const response = await fetch(url_upload_file,
         {
-            const Myheaders = new Headers();
-            Myheaders.append(
-                "Content-type",
-                "application/json"
-            );
-            const response = await fetch(url,
-            {
-              method: 'POST',
-              headers :Myheaders ,
-              body: JSON.stringify({filepath}),
-            } );
-            if (!response.ok)
-            {
-                throw new Error(
-                    `Response Status :  ${response.status}`
-                );
-            }
-            const transcript_result= await response.text();
-            console.log(transcript_result);
-        } 
-        catch (error) {
-            console.error(error.message);
+            method: "POST",
+            headers:{ "Content-type" : application/json},
+            body: JSON.stringify({
+              filepath : `${folder_value}/${Date.now()}${fileInput.files[0].name}`
+            })
         }
+      )
+      if (!response.ok)
+      {
+        throw new Error(`Response status: ${response.status}`);
+      }
+      const transcript_result = await response.text()
+      console.log(transcript_result);
+      } 
+      catch (error)
+      {
+        
+      }
+      
     }
-    
 )
