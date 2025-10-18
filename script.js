@@ -2,6 +2,7 @@ const fileInput = document.querySelector('#audio_input');
 const uploadButton = document.querySelector('.upload_button');
 const convertButton = document.querySelector('.convert_button');
 let filepath = '';
+let filename = ''
 let folder_value = 'transcription-bucket'; 
 const bucket_value = 'guest-users';
 
@@ -9,8 +10,8 @@ const bucket_value = 'guest-users';
 fileInput.addEventListener('change',
     ()=>
     {
-       
-        filepath = `${folder_value}/${Date.now()}${fileInput.files[0].name}`;
+        filename = `${Date.now()}${fileInput.files[0].name}`
+        filepath = `${folder_value}/${filename}`;
         console.log(filepath);
     }
 )
@@ -27,7 +28,9 @@ uploadButton.addEventListener('click',
                     headers: {
                         'Content-type' : "application/json"
                     },
-                    body: JSON.stringify({bucket_value : 'guest-users',filepath : `${folder_value}/${Date.now()}${fileInput.files[0].name}`}),
+                    body: JSON.stringify({
+                        bucket_value : 'guest-users',
+                        filepath : `${folder_value}/${filename}`}),
                 })
 
             if(!response.ok)
@@ -42,7 +45,7 @@ uploadButton.addEventListener('click',
                     body: (fileInput.files[0])
                 }
             )
-            if(!upload_time)
+            if(!upload_time.ok)
             {
                 throw new Error(`Response status: ${upload_time.status}`);
             }
@@ -56,17 +59,18 @@ uploadButton.addEventListener('click',
 )
 
 convertButton.addEventListener('click',
-    async function Convert_Data()
+    async function Convert_Data_Front()
     {
-      url_upload_file = `/api/process`;
+      const url_upload_file = `/api/process`;
       try 
       {
         const response = await fetch(url_upload_file,
         {
             method: "POST",
-            headers:{ "Content-type" : application/json},
+            headers:{ "Content-type" : 'application/json'},
             body: JSON.stringify({
-              filepath : `${folder_value}/${Date.now()}${fileInput.files[0].name}`
+                bucket_value: 'guest-users',
+                filepath : `${folder_value}/${filename}`
             })
         }
       )
@@ -75,11 +79,12 @@ convertButton.addEventListener('click',
         throw new Error(`Response status: ${response.status}`);
       }
       const transcript_result = await response.text()
+      
       console.log(transcript_result);
       } 
       catch (error)
       {
-        
+        throw new Error(error.message);
       }
       
     }
